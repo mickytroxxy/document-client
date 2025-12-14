@@ -189,7 +189,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-6">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8 px-4 sm:py-12 sm:px-6">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div 
@@ -231,7 +231,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
 
           {/* Country Selector Box */}
           <div className="mt-6 w-full">
-            <div className="glass-card rounded-2xl p-6">
+            <div className="glass-card rounded-2xl p-4 sm:p-6">
               <div className="mb-2 text-left">
                 <h2 className="font-display text-lg font-semibold text-foreground">Select Your Country</h2>
                 <p className="text-sm text-muted-foreground">We currently offer document generation for supported countries.</p>
@@ -251,7 +251,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
 
         {/* Unsupported Country */}
         {countryCode !== 'ZA' ? (
-          <div className="glass-card rounded-2xl p-8 text-center">
+          <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 text-center">
             <h3 className="font-display text-2xl font-bold text-foreground mb-2">Unsupported Country</h3>
             <p className="text-muted-foreground">
               We do not offer document editing in your country yet. Please select South Africa or check back later.
@@ -259,20 +259,20 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           </div>
         ) : (
           <div className="space-y-6">
-            <form 
-              onSubmit={handleSubmit} 
-              className="space-y-6"
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 sm:space-y-6"
             >
               <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
               {/* Gradient header */}
-              <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 text-white flex justify-between items-center">
+              <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 sm:p-6 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center">
                 <div>
                   <h1 className="text-2xl font-bold">Document Generation</h1>
                   <p className="text-cyan-100 text-sm mt-1">AI-Powered Document Creation</p>
                 </div>
-                <div className="text-right">
+                <div className="text-center sm:text-right mt-4 sm:mt-0">
                   <p className="text-cyan-100 text-sm">Available Balance</p>
-                  <p className="text-2xl font-bold">R{balance}</p>
+                  <p className="text-xl sm:text-2xl font-bold">R{balance}</p>
                 </div>
               </div>
               
@@ -315,7 +315,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           </div>
 
           {/* Personal Information */}
-          <div className="glass-card rounded-2xl p-8 space-y-6">
+          <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
                 <User className="w-5 h-5" />
@@ -352,7 +352,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           </div>
 
           {/* Bank Information */}
-          <div className="glass-card rounded-2xl p-8 space-y-6">
+          <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
                 <CreditCard className="w-5 h-5" />
@@ -390,7 +390,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           </div>
 
           {/* Employment Information */}
-          <div className="glass-card rounded-2xl p-8 space-y-6">
+          <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
                 <Briefcase className="w-5 h-5" />
@@ -458,7 +458,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           </div>
 
           {/* Company Information */}
-              <div className="glass-card rounded-2xl p-8 space-y-6">
+          <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
                 <Building2 className="w-5 h-5" />
