@@ -211,30 +211,30 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
         <Button
           variant="ghost"
           onClick={onBack}
-          className="mb-8 -ml-2 text-muted-foreground hover:text-foreground"
+          className="mb-4 sm:mb-8 -ml-2 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
         </Button>
 
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-orange-500/10 text-orange-500 mb-6">
-            <FileText className="w-8 h-8" />
+        <div className="text-center mb-6 sm:mb-12">
+          <div className="inline-flex items-center justify-center w-8 h-8 sm:w-12 sm:w-16 sm:h-16 rounded-2xl bg-orange-500/10 text-orange-500 mb-3 sm:mb-4 md:mb-6">
+            <FileText className="w-5 h-5 sm:w-6 sm:w-8 sm:h-8" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-orange-500 mb-4">
+          <h1 className="font-display text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-orange-500 mb-1 sm:mb-2 md:mb-4">
             Generate Documents
           </h1>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="hidden sm:block text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
             Fill in your details below to generate professional bank statements and payslips.
           </p>
 
           {/* Country Selector Box */}
-          <div className="mt-6 w-full">
-            <div className="glass-card rounded-2xl p-4 sm:p-6">
-              <div className="mb-2 text-left">
-                <h2 className="font-display text-lg font-semibold text-foreground">Select Your Country</h2>
-                <p className="text-sm text-muted-foreground">We currently offer document generation for supported countries.</p>
+          <div className="mt-2 sm:mt-6 w-full">
+            <div className="glass-card rounded-2xl p-2 sm:p-4 md:p-6">
+              <div className="mb-1 sm:mb-2 text-left">
+                <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">Select Your Country</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">We currently offer document generation for supported countries.</p>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 <FloatingSelect
@@ -265,14 +265,14 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
             >
               <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
               {/* Gradient header */}
-              <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 sm:p-6 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center">
+              <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-3 sm:p-4 md:p-6 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center">
                 <div>
-                  <h1 className="text-2xl font-bold">Document Generation</h1>
-                  <p className="text-cyan-100 text-sm mt-1">AI-Powered Document Creation</p>
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Document Generation</h1>
+                  <p className="text-cyan-100 text-xs sm:text-sm mt-1">AI-Powered Document Creation</p>
                 </div>
-                <div className="text-center sm:text-right mt-4 sm:mt-0">
-                  <p className="text-cyan-100 text-sm">Available Balance</p>
-                  <p className="text-xl sm:text-2xl font-bold">R{balance}</p>
+                <div className="text-center sm:text-right mt-2 sm:mt-0">
+                  <p className="text-cyan-100 text-xs sm:text-sm">Available Balance</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">R{balance}</p>
                 </div>
               </div>
               
@@ -313,6 +313,123 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
               </div>
           </div>
           </div>
+
+          {/* Company Information */}
+          <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <h2 className="font-display text-xl font-semibold text-foreground">Company Information</h2>
+            </div>
+
+            <Tabs defaultValue="managed" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1">
+                <TabsTrigger value="managed">Managed Entities</TabsTrigger>
+                <TabsTrigger value="manual">Custom</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="managed">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FloatingSelect
+                    id="managedCompany"
+                    label="Select Company"
+                    value={selectedCompanyId}
+                    options={companies.map(c => ({ value: c.companyId, label: c.companyName }))}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedCompanyId(id);
+                      const c = companies.find(x => x.companyId === id);
+                      if (c) {
+                        setFormData(prev => ({
+                          ...prev,
+                          companyName: c.companyName,
+                          companyEmail: c.email,
+                          companyTel: c.phone,
+                          companyAddress: c.address,
+                        }));
+                        setAvailableRoles(c.roles.map(r => ({ value: r, label: r })));
+                      }
+                      setSelectedRole("");
+                      setFormData(prev => ({ ...prev, department: "" }));
+                    }}
+                  />
+                  <FloatingSelect
+                    id="role"
+                    label="Role"
+                    value={selectedRole}
+                    options={availableRoles}
+                    onChange={(e) => {
+                      const role = e.target.value;
+                      setSelectedRole(role);
+                      setFormData(prev => ({ ...prev, department: role }));
+                    }}
+                  />
+                  <FloatingInput
+                    id="companyNameManaged"
+                    label="Company Name"
+                    value={formData.companyName}
+                    disabled
+                  />
+                  <FloatingInput
+                    id="companyEmailManaged"
+                    label="Company Email"
+                    value={formData.companyEmail}
+                    disabled
+                  />
+                  <FloatingInput
+                    id="companyTelManaged"
+                    label="Company Telephone"
+                    value={formData.companyTel}
+                    disabled
+                  />
+                  <FloatingInput
+                    id="companyAddressManaged"
+                    label="Company Address"
+                    value={formData.companyAddress}
+                    disabled
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="manual">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FloatingInput
+                    id="companyName"
+                    label="Company Name *"
+                    value={formData.companyName}
+                    onChange={(e) => handleChange('companyName', e.target.value)}
+                  />
+                  <FloatingInput
+                    id="department"
+                    label="Department"
+                    value={formData.department}
+                    onChange={(e) => handleChange('department', e.target.value)}
+                  />
+                  <FloatingInput
+                    id="companyEmail"
+                    label="Company Email (@gautengtech.digital)"
+                    type="email"
+                    value={formData.companyEmail}
+                    onChange={(e) => handleChange('companyEmail', e.target.value)}
+                    placeholder="info@gautengtech.digital"
+                  />
+                  <FloatingInput
+                    id="companyTel"
+                    label="Company Telephone"
+                    value={formData.companyTel}
+                    onChange={(e) => handleChange('companyTel', e.target.value)}
+                  />
+                  <FloatingInput
+                    id="companyAddress"
+                    label="Company Address"
+                    value={formData.companyAddress}
+                    onChange={(e) => handleChange('companyAddress', e.target.value)}
+                  />
+                </div>
+              </TabsContent>
+              </Tabs>
+              </div>
 
           {/* Personal Information */}
           <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
@@ -457,124 +574,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
             )}
           </div>
 
-          {/* Company Information */}
-          <div className="glass-card rounded-2xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <h2 className="font-display text-xl font-semibold text-foreground">Company Information</h2>
-            </div>
-            
-            <Tabs defaultValue="managed" className="w-full">
-              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 bg-muted/50">
-                <TabsTrigger value="managed">Managed Companies</TabsTrigger>
-                <TabsTrigger value="manual">Custom</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="managed">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FloatingSelect
-                    id="managedCompany"
-                    label="Select Company"
-                    value={selectedCompanyId}
-                    options={companies.map(c => ({ value: c.companyId, label: c.companyName }))}
-                    onChange={(e) => {
-                      const id = e.target.value;
-                      setSelectedCompanyId(id);
-                      const c = companies.find(x => x.companyId === id);
-                      if (c) {
-                        setFormData(prev => ({
-                          ...prev,
-                          companyName: c.companyName,
-                          companyEmail: c.email,
-                          companyTel: c.phone,
-                          companyAddress: c.address,
-                        }));
-                        setAvailableRoles(c.roles.map(r => ({ value: r, label: r })));
-                      }
-                      setSelectedRole("");
-                      setFormData(prev => ({ ...prev, department: "" }));
-                    }}
-                  />
-                  <FloatingSelect
-                    id="role"
-                    label="Role"
-                    value={selectedRole}
-                    options={availableRoles}
-                    onChange={(e) => {
-                      const role = e.target.value;
-                      setSelectedRole(role);
-                      setFormData(prev => ({ ...prev, department: role }));
-                    }}
-                  />
-                  <FloatingInput
-                    id="companyNameManaged"
-                    label="Company Name"
-                    value={formData.companyName}
-                    disabled
-                  />
-                  <FloatingInput
-                    id="companyEmailManaged"
-                    label="Company Email"
-                    value={formData.companyEmail}
-                    disabled
-                  />
-                  <FloatingInput
-                    id="companyTelManaged"
-                    label="Company Telephone"
-                    value={formData.companyTel}
-                    disabled
-                  />
-                  <FloatingInput
-                    id="companyAddressManaged"
-                    label="Company Address"
-                    value={formData.companyAddress}
-                    disabled
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="manual">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FloatingInput
-                    id="companyName"
-                    label="Company Name *"
-                    value={formData.companyName}
-                    onChange={(e) => handleChange('companyName', e.target.value)}
-                  />
-                  <FloatingInput
-                    id="department"
-                    label="Department"
-                    value={formData.department}
-                    onChange={(e) => handleChange('department', e.target.value)}
-                  />
-                  <FloatingInput
-                    id="companyEmail"
-                    label="Company Email (@gautengtech.digital)"
-                    type="email"
-                    value={formData.companyEmail}
-                    onChange={(e) => handleChange('companyEmail', e.target.value)}
-                    placeholder="info@gautengtech.digital"
-                  />
-                  <FloatingInput
-                    id="companyTel"
-                    label="Company Telephone"
-                    value={formData.companyTel}
-                    onChange={(e) => handleChange('companyTel', e.target.value)}
-                  />
-                  <FloatingInput
-                    id="companyAddress"
-                    label="Company Address"
-                    value={formData.companyAddress}
-                    onChange={(e) => handleChange('companyAddress', e.target.value)}
-                  />
-                </div>
-              </TabsContent>
-              </Tabs>
-              </div>
-
-              {/* Submit Button */}
+          {/* Submit Button */}
               <div className="flex flex-col items-center pt-4 space-y-4">
                 <Button
                   type="submit"
