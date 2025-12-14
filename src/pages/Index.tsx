@@ -6,9 +6,9 @@ import { AppDownloadSection } from "@/components/AppDownloadSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { FAQSection } from "@/components/FAQSection";
 import { Footer } from "@/components/Footer";
-import { DocumentForm } from "@/components/DocumentForm";
 import { DownloadModal } from "@/components/DownloadModal";
 import { DocumentResponse } from "@/types/document";
+import { ZA_COMPONENT } from "@/components/countries/ZA_COMPONENT/ZA_COMPONENT";
 
 const Index = () => {
   const [view, setView] = useState<"hero" | "form">("hero");
@@ -48,10 +48,7 @@ const Index = () => {
           <Footer />
         </>
       ) : (
-        <DocumentForm 
-          onBack={handleBackToHome} 
-          onSuccess={handleSuccess}
-        />
+        <ZA_COMPONENT onBack={handleBackToHome} onSuccess={handleSuccess} />
       )}
       
       <DownloadModal

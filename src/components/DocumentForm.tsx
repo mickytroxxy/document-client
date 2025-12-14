@@ -1,10 +1,16 @@
-import { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FloatingInput } from "@/components/FloatingInput";
 import { FloatingSelect } from "@/components/FloatingSelect";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, FileText, Loader2, Building2, User, CreditCard, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentResponse } from "@/types/document";
+import { companies } from "@/data/companies";
+import { countries } from "@/data/countries";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import useAuthStore from "@/store/useAuth";
 
 interface DocumentFormProps {
   onBack: () => void;
@@ -44,6 +50,12 @@ const bankTypeOptions = [
 
 export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState("");
+  const [countryCode, setCountryCode] = useState<'ZA' | 'NG' | 'US'>("ZA");
+  const [isPayslipIncluded, setIsPayslipIncluded] = useState(true);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  const [loginPhone, setLoginPhone] = useState("");
   const [formData, setFormData] = useState({
     title: "MR",
     accountHolder: "",
@@ -57,6 +69,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
     paymentMethod: "Bank Deposit",
     bankType: "tymebank",
     idNumber: "",
+    physicalAddress: "",
     taxReference: "",
     department: "",
     branchCode: "",
@@ -65,6 +78,28 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
     companyEmail: "",
     companyTel: "",
   });
+
+  // Use individual selectors to prevent unnecessary re-renders
+  const phone = useAuthStore((state) => state.phone);
+  const balance = useAuthStore((state) => state.balance);
+  const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
+
+  const cryptoAddress = useMemo(() => {
+    const chars = "abcdef0123456789";
+    let addr = "0x";
+    for (let i = 0; i < 40; i++) addr += chars[Math.floor(Math.random() * chars.length)];
+    return addr;
+  }, []);
+
+  const hasPayslipAvailable = useMemo(() => {
+    const cfg = countries.find(c => c.country_code === countryCode);
+    return !!cfg?.documents.some(d => d.documentType === 'PAYSLIP');
+  }, [countryCode]);
+
+  useEffect(() => {
+    if (!hasPayslipAvailable) setIsPayslipIncluded(false);
+  }, [hasPayslipAvailable]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -110,6 +145,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           bankName: formData.bankType,
           bankType: formData.bankType,
           idNumber: formData.idNumber,
+          physicalAddress: formData.physicalAddress,
           taxReference: formData.taxReference,
           department: formData.department,
           branchCode: formData.branchCode,
@@ -117,6 +153,9 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           companyAddress: formData.companyAddress,
           companyEmail: formData.companyEmail || "info@gautengtech.digital",
           companyTel: formData.companyTel,
+          isPayslipIncluded,
+          countryCode,
+          userPhone: phone || undefined,
         }),
       });
 
@@ -170,10 +209,57 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
             Fill in your details below to generate professional bank statements and payslips.
           </p>
+
+          {/* Country Selector Box */}
+          <div className="mt-6 w-full">
+            <div className="glass-card rounded-2xl p-6">
+              <div className="mb-2 text-left">
+                <h2 className="font-display text-lg font-semibold text-foreground">Select Your Country</h2>
+                <p className="text-sm text-muted-foreground">We currently offer document generation for supported countries.</p>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <FloatingSelect
+                  id="country"
+                  label="Country"
+                  value={countryCode}
+                  options={countries.map(c => ({ value: c.country_code, label: c.countryName }))}
+                  onChange={(e) => setCountryCode(e.target.value as 'ZA' | 'NG' | 'US')}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Form */}
+        {/* Unsupported Country */}
+        {countryCode !== 'ZA' ? (
+          <div className="glass-card rounded-2xl p-8 text-center">
+            <h3 className="font-display text-2xl font-bold text-foreground mb-2">Unsupported Country</h3>
+            <p className="text-muted-foreground">
+              We do not offer document editing in your country yet. Please select South Africa or check back later.
+            </p>
+          </div>
+        ) : (
+        /* Form */
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Auth and Balance Bar */}
+          <div className="glass-card rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="text-sm text-muted-foreground">
+              {phone ? (
+                <span>Logged in as <span className="font-medium text-foreground">{phone}</span></span>
+              ) : (
+                <span>You are not logged in</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-sm">Balance: <span className="font-semibold">R {balance?.toFixed(2) || '0.00'}</span></div>
+              <Button type="button" variant="outline" onClick={() => setIsTopUpOpen(true)}>Top Up Balance</Button>
+              {phone ? (
+                <Button type="button" variant="secondary" onClick={logout}>Logout</Button>
+              ) : (
+                <Button type="button" variant="secondary" onClick={() => setIsLoginOpen(true)}>Login</Button>
+              )}
+            </div>
+          </div>
           {/* Personal Information */}
           <div className="glass-card rounded-2xl p-8 space-y-6">
             <div className="flex items-center gap-3 mb-6">
@@ -202,6 +288,12 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                 label="ID Number *"
                 value={formData.idNumber}
                 onChange={(e) => handleChange('idNumber', e.target.value)}
+              />
+              <FloatingInput
+                id="physicalAddress"
+                label="Physical Address"
+                value={formData.physicalAddress}
+                onChange={(e) => handleChange('physicalAddress', e.target.value)}
               />
               <FloatingInput
                 id="taxReference"
@@ -312,6 +404,19 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
             />
           </div>
 
+          {/* Document Options */}
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Checkbox id="includePayslips" checked={isPayslipIncluded} disabled={!hasPayslipAvailable} onCheckedChange={(v) => setIsPayslipIncluded(!!v)} />
+                <label htmlFor="includePayslips" className="text-foreground">Include Payslips</label>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {hasPayslipAvailable ? 'Payslips available in your country' : 'Payslips not available in your country'}
+              </div>
+            </div>
+          </div>
+
           {/* Company Information */}
           <div className="glass-card rounded-2xl p-8 space-y-6">
             <div className="flex items-center gap-3 mb-6">
@@ -321,35 +426,93 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
               <h2 className="font-display text-xl font-semibold text-foreground">Company Information</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FloatingInput
-                id="companyName"
-                label="Company Name *"
-                value={formData.companyName}
-                onChange={(e) => handleChange('companyName', e.target.value)}
-              />
-              <FloatingInput
-                id="companyEmail"
-                label="Company Email (@gautengtech.digital)"
-                type="email"
-                value={formData.companyEmail}
-                onChange={(e) => handleChange('companyEmail', e.target.value)}
-                placeholder="info@gautengtech.digital"
-              />
-              <FloatingInput
-                id="companyTel"
-                label="Company Telephone"
-                value={formData.companyTel}
-                onChange={(e) => handleChange('companyTel', e.target.value)}
-              />
-              <FloatingInput
-                id="companyAddress"
-                label="Company Address"
-                value={formData.companyAddress}
-                onChange={(e) => handleChange('companyAddress', e.target.value)}
-                className="md:col-span-1"
-              />
-            </div>
+            <Tabs defaultValue="managed" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+                <TabsTrigger value="managed">Managed Companies</TabsTrigger>
+                <TabsTrigger value="manual">Manual</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="managed">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FloatingSelect
+                    id="managedCompany"
+                    label="Select Company"
+                    value={selectedCompanyId}
+                    options={companies.map(c => ({ value: c.companyId, label: c.companyName }))}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedCompanyId(id);
+                      const c = companies.find(x => x.companyId === id);
+                      if (c) {
+                        setFormData(prev => ({
+                          ...prev,
+                          companyName: c.companyName,
+                          companyEmail: c.email,
+                          companyTel: c.phone,
+                          companyAddress: c.address,
+                        }));
+                      }
+                    }}
+                  />
+                  <div />
+                  <FloatingInput
+                    id="companyNameManaged"
+                    label="Company Name"
+                    value={formData.companyName}
+                    disabled
+                  />
+                  <FloatingInput
+                    id="companyEmailManaged"
+                    label="Company Email"
+                    value={formData.companyEmail}
+                    disabled
+                  />
+                  <FloatingInput
+                    id="companyTelManaged"
+                    label="Company Telephone"
+                    value={formData.companyTel}
+                    disabled
+                  />
+                  <FloatingInput
+                    id="companyAddressManaged"
+                    label="Company Address"
+                    value={formData.companyAddress}
+                    disabled
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="manual">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FloatingInput
+                    id="companyName"
+                    label="Company Name *"
+                    value={formData.companyName}
+                    onChange={(e) => handleChange('companyName', e.target.value)}
+                  />
+                  <FloatingInput
+                    id="companyEmail"
+                    label="Company Email (@gautengtech.digital)"
+                    type="email"
+                    value={formData.companyEmail}
+                    onChange={(e) => handleChange('companyEmail', e.target.value)}
+                    placeholder="info@gautengtech.digital"
+                  />
+                  <FloatingInput
+                    id="companyTel"
+                    label="Company Telephone"
+                    value={formData.companyTel}
+                    onChange={(e) => handleChange('companyTel', e.target.value)}
+                  />
+                  <FloatingInput
+                    id="companyAddress"
+                    label="Company Address"
+                    value={formData.companyAddress}
+                    onChange={(e) => handleChange('companyAddress', e.target.value)}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Submit Button */}
@@ -381,6 +544,84 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
             </p>
           )}
         </form>
+        )}
+
+        {/* Login Modal */}
+        <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+          <DialogContent className="sm:max-w-md bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Login</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <FloatingInput
+                id="loginPhone"
+                label="Phone Number"
+                placeholder="e.g. +27 71 234 5678"
+                value={loginPhone}
+                onChange={(e) => setLoginPhone(e.target.value)}
+              />
+              <Button
+                type="button"
+                className="w-full"
+                onClick={() => {
+                  if (!loginPhone.trim()) {
+                    toast.error('Please enter your phone number');
+                    return;
+                  }
+                  login(loginPhone.trim());
+                  toast.success('Logged in');
+                  setIsLoginOpen(false);
+                }}
+              >
+                Login
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Top Up Modal */}
+        <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
+          <DialogContent className="sm:max-w-lg bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Top Up Balance</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="glass-card p-4 rounded-xl">
+                <h4 className="font-semibold mb-2">Pay with Crypto</h4>
+                <p className="text-sm text-muted-foreground mb-3">Send any supported crypto to the address below, then send POP via WhatsApp.</p>
+                <div className="flex items-center gap-2">
+                  <code className="px-3 py-2 rounded bg-muted text-xs break-all flex-1">{cryptoAddress}</code>
+                  <Button type="button" variant="outline" onClick={() => { navigator.clipboard.writeText(cryptoAddress); toast.success('Address copied'); }}>Copy</Button>
+                </div>
+              </div>
+
+              <div className="glass-card p-4 rounded-xl">
+                <h4 className="font-semibold mb-2">Pay to FNB Account</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li><span className="font-medium text-foreground">Bank:</span> FNB</li>
+                  <li><span className="font-medium text-foreground">Account Name:</span> GautengTech Digital</li>
+                  <li><span className="font-medium text-foreground">Account Number:</span> 62012345678</li>
+                  <li><span className="font-medium text-foreground">Branch Code:</span> 250655</li>
+                  <li><span className="font-medium text-foreground">Reference:</span> Your Phone Number</li>
+                </ul>
+              </div>
+
+              <div className="glass-card p-4 rounded-xl">
+                <h4 className="font-semibold mb-2">Pay via E-WALLET</h4>
+                <p className="text-sm text-muted-foreground">Send an eWallet to <span className="font-medium text-foreground">+27 609 155 512</span> and share proof via WhatsApp.</p>
+              </div>
+
+              <div className="glass-card p-4 rounded-xl">
+                <h4 className="font-semibold mb-2">Send Proof of Payment</h4>
+                <p className="text-sm text-muted-foreground">Send POP to our WhatsApp number shown in the footer: <span className="font-medium text-foreground">+27 609 155 512</span>.</p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="button" onClick={() => setIsTopUpOpen(false)}>Close</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   );
