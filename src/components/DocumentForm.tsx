@@ -11,6 +11,7 @@ import { countries } from "@/data/countries";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import useAuthStore from "@/store/useAuth";
+import useFetch from "@/hooks/useFetch";
 
 interface DocumentFormProps {
   onBack: () => void;
@@ -50,6 +51,7 @@ const bankTypeOptions = [
 
 
 export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
+  const { fetchData } = useFetch();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [countryCode, setCountryCode] = useState<'ZA' | 'NG' | 'US'>("ZA");
@@ -58,6 +60,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [loginPhone, setLoginPhone] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<{value: string, label: string}[]>([]);
   const [formData, setFormData] = useState({
     title: "MR",
@@ -87,6 +90,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   const balance = useAuthStore((state) => state.balance);
   const login = useAuthStore((state) => state.login);
   const logout = useAuthStore((state) => state.logout);
+  const topUp = useAuthStore((state) => state.topUp);
 
   const cryptoAddress = useMemo(() => {
     const chars = "abcdef0123456789";
@@ -100,9 +104,28 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
     return !!cfg?.documents.some(d => d.documentType === 'PAYSLIP');
   }, [countryCode]);
 
+  const totalCost = useMemo(() => {
+    const cfg = countries.find(c => c.country_code === countryCode);
+    const bankPrice = cfg?.documents.find(d => d.documentType === 'BANK_STATEMENT')?.price || 0;
+    const payslipPrice = cfg?.documents.find(d => d.documentType === 'PAYSLIP')?.price || 0;
+    return bankPrice + (isPayslipIncluded ? payslipPrice : 0);
+  }, [countryCode, isPayslipIncluded]);
+
   useEffect(() => {
     if (!hasPayslipAvailable) setIsPayslipIncluded(false);
   }, [hasPayslipAvailable]);
+
+  useEffect(() => {
+    if (phone) {
+      fetchData({ endPoint: '/authenticate', method: 'POST', data: { phoneNumber: phone } }).then(result => {
+        if (result && result.status === 1) {
+          login(phone, result.data.balance);
+        }
+      }).catch(() => {
+        // ignore errors
+      });
+    }
+  }, [phone, fetchData, login]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -110,11 +133,17 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
+    // Check balance
+    if (balance < totalCost) {
+      setShowInsufficientModal(true);
+      return;
+    }
+
     // Validate required fields
     const requiredFields = ['accountHolder', 'accountNumber', 'salaryAmount', 'idNumber', 'companyName'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
-    
+
     if (missingFields.length > 0) {
       toast.error("Please fill in all required fields");
       return;
@@ -129,12 +158,10 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
     });
 
     try {
-      const response = await fetch('https://documents-225250995708.europe-west1.run.app/api/generateDocs', {
+      const data = await fetchData({
+        endPoint: '/generateDocs',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+        data: {
           title: formData.title,
           accountHolder: formData.accountHolder,
           accountNumber: formData.accountNumber,
@@ -159,13 +186,14 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           isPayslipIncluded,
           countryCode,
           userPhone: phone || undefined,
-        }),
+          totalCost,
+        },
       });
 
-      const data = await response.json();
-
-      if (data.status === 1) {
+      if (data && data.status === 1) {
         toast.success(data.message || "Documents generated successfully!");
+        // Update local balance
+        topUp(-totalCost);
         // Ensure we have the arrays for bankstatements and payslips
         const responseData = {
           ...data,
@@ -265,13 +293,13 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
             >
               <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
               {/* Gradient header */}
-              <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-3 sm:p-4 md:p-6 text-white flex flex-col sm:flex-row sm:justify-between sm:items-center">
+              <div className="glass-card p-3 sm:p-4 md:p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
                 <div>
                   <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Document Generation</h1>
-                  <p className="text-cyan-100 text-xs sm:text-sm mt-1">AI-Powered Document Creation</p>
+                  <p className="text-dark-100 text-xs sm:text-sm mt-1">AI-Powered Document Creation</p>
                 </div>
                 <div className="text-center sm:text-right mt-2 sm:mt-0">
-                  <p className="text-cyan-100 text-xs sm:text-sm">Available Balance</p>
+                  <p className="text-dark-100 text-xs sm:text-sm">Available Balance</p>
                   <p className="text-lg sm:text-xl md:text-2xl font-bold">R{balance}</p>
                 </div>
               </div>
@@ -285,9 +313,20 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                 {phone ? (
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-cyan-100">Logged in as: {phone}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsTopUpOpen(true);
+                      }}
+                      className="text-cyan-100 border-cyan-100/30 hover:bg-cyan-600/20"
+                    >
+                      Top Up
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={(e) => {
                         e.preventDefault();
                         logout();
@@ -575,8 +614,11 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           </div>
 
           {/* Submit Button */}
-              <div className="flex flex-col items-center pt-4 space-y-4">
-                <Button
+          <div className="flex flex-col items-center pt-4 space-y-4">
+            <div className="text-center text-sm text-muted-foreground">
+              Total Cost: R{totalCost}
+            </div>
+            <Button
                   type="submit"
                   size="lg"
                   disabled={isLoading}
@@ -622,14 +664,23 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
               <Button
                 type="button"
                 className="w-full"
-                onClick={() => {
+                onClick={async () => {
                   if (!loginPhone.trim()) {
                     toast.error('Please enter your phone number');
                     return;
                   }
-                  login(loginPhone.trim());
-                  toast.success('Logged in');
-                  setIsLoginOpen(false);
+                  const result = await fetchData({
+                    endPoint: '/authenticate',
+                    method: 'POST',
+                    data: { phoneNumber: loginPhone.trim() },
+                  });
+                  if (result && result.status === 1) {
+                    login(loginPhone.trim(), result.data.balance);
+                    toast.success(result.message);
+                    setIsLoginOpen(false);
+                  } else {
+                    toast.error(result?.message || 'Login failed');
+                  }
                 }}
               >
                 Login
@@ -638,13 +689,42 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           </DialogContent>
         </Dialog>
 
+        {/* Insufficient Balance Modal */}
+        <Dialog open={showInsufficientModal} onOpenChange={setShowInsufficientModal}>
+          <DialogContent className="sm:max-w-md bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Insufficient Balance</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                You don't have enough balance to create a {formData.months} months bank statement{isPayslipIncluded ? ' or payslip' : ''}.
+                We are going to only generate a sample 1 bank statement and one payslip for you.
+              </p>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowInsufficientModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, months: '1' }));
+                    setIsPayslipIncluded(true);
+                    setShowInsufficientModal(false);
+                  }}
+                >
+                  Generate Sample
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Top Up Modal */}
         <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
-          <DialogContent className="sm:max-w-lg bg-card border-border">
+          <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle className="font-display text-xl">Top Up Balance</DialogTitle>
             </DialogHeader>
-            <div className="space-y-6">
+            <div className="space-y-6 overflow-y-auto max-h-96">
               <div className="glass-card p-4 rounded-xl">
                 <h4 className="font-semibold mb-2">Pay with Crypto</h4>
                 <p className="text-sm text-muted-foreground mb-3">Send any supported crypto to the address below, then send POP via WhatsApp.</p>

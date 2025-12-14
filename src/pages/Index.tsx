@@ -42,7 +42,7 @@ const Index = () => {
           <HeroSection onGetStarted={handleGetStarted} />
           <FeaturesSection />
           <UseCasesSection />
-          <AppDownloadSection />
+          {/* <AppDownloadSection /> */}
           <TestimonialsSection />
           <FAQSection />
           <Footer />
