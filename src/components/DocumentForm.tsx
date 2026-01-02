@@ -6,8 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, FileText, Loader2, Building2, User, CreditCard, Briefcase, Ghost } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentResponse } from "@/types/document";
-import { companies } from "@/data/companies";
-import { countries } from "@/data/countries";
+import { fetchCompanies, type CompanyInfo } from "@/data";
+import { fetchCountries, type Country } from "@/data";
+import { fetchBanks, type Bank } from "@/data";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -38,6 +39,20 @@ const paymentMethodOptions = [
   { value: "Direct Deposit", label: "Direct Deposit" },
 ];
 
+const accountTypeOptions = [
+  { value: "Easy Zero", label: "Easy Zero" },
+  { value: "Easy PAYU", label: "Easy PAYU" },
+  { value: "Easy Smart/Bundled", label: "Easy Smart/Bundled" },
+  
+  { value: "Aspire Current Account", label: "Aspire Current Account" },
+  { value: "Premier Current Account", label: "Premier Current Account" },
+  
+  { value: "Business Account", label: "Business Account" },
+  { value: "Cheque Account", label: "Cheque Account" },
+  { value: "Savings Account", label: "Savings Account" }
+];
+
+
 const titleOptions = [
   { value: "MR", label: "Mr" },
   { value: "MRS", label: "Mrs" },
@@ -46,11 +61,6 @@ const titleOptions = [
   { value: "PROF", label: "Prof" },
 ];
 
-const bankTypeOptions = [
-  { value: "standard", label: "Standard Bank" },
-  { value: "tymebank", label: "TymeBank" },
-  { value: "CAPITEC", label: "Capitec" }
-];
 
 
 
@@ -66,7 +76,12 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   const [loginPhone, setLoginPhone] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<{value: string, label: string}[]>([]);
+  const [companies, setCompanies] = useState<CompanyInfo[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const bankTypeOptions = useMemo(() => banks, [banks]);
   const [formData, setFormData] = useState({
     title: "MR",
     accountHolder: "",
@@ -89,6 +104,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
     companyEmail: "",
     companyTel: "",
     comment: "",
+    accountType: "Business Account",
   });
 
   // Use individual selectors to prevent unnecessary re-renders
@@ -118,6 +134,20 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   useEffect(() => {
     if (!hasPayslipAvailable) setIsPayslipIncluded(false);
   }, [hasPayslipAvailable]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const [companiesData, countriesData, banksData] = await Promise.all([
+        fetchCompanies(),
+        fetchCountries(),
+        fetchBanks()
+      ]);
+      setCompanies(companiesData);
+      setCountries(countriesData);
+      setBanks(banksData);
+    };
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (phone) {
@@ -153,10 +183,14 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
       return;
     }
 
-    // Email is optional - users can use their own email
+    // Show confirmation modal
+    setShowConfirmationModal(true);
+  };
 
+  const confirmSubmit = async () => {
+    setShowConfirmationModal(false);
     setIsLoading(true);
-    
+
     toast.info("Generating your documents. This may take up to 3 minutes. A popup will appear when ready.", {
       duration: 10000,
     });
@@ -178,6 +212,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           paymentMethod: formData.paymentMethod,
           bankName: formData.bankType,
           bankType: formData.bankType,
+          accountType: formData.accountType,
           idNumber: formData.idNumber,
           physicalAddress: formData.physicalAddress,
           taxReference: formData.taxReference,
@@ -187,6 +222,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
           companyAddress: formData.companyAddress,
           companyEmail: formData.companyEmail || "info@gautengtech.digital",
           companyTel: formData.companyTel,
+          companyId: selectedCompanyId,
           isPayslipIncluded,
           countryCode,
           userPhone: phone || undefined,
@@ -274,7 +310,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                   id="country"
                   label="Country"
                   value={countryCode}
-                  options={countries.map(c => ({ value: c.country_code, label: c.countryName }))}
+                  options={countries?.map(c => ({ value: c.country_code, label: c.countryName }))}
                   onChange={(e) => setCountryCode(e.target.value as 'ZA' | 'NG' | 'US')}
                 />
               </div>
@@ -379,11 +415,11 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                     id="managedCompany"
                     label="Select Company"
                     value={selectedCompanyId}
-                    options={companies.map(c => ({ value: c.companyId, label: c.companyName }))}
+                    options={companies?.map(c => ({ value: c.companyId, label: c.companyName }))}
                     onChange={(e) => {
                       const id = e.target.value;
                       setSelectedCompanyId(id);
-                      const c = companies.find(x => x.companyId === id);
+                      const c = companies?.find(x => x.companyId === id);
                       if (c) {
                         setFormData(prev => ({
                           ...prev,
@@ -535,6 +571,15 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                 options={bankTypeOptions}
                 onChange={(e) => handleChange('bankType', e.target.value)}
               />
+              {formData.bankType === "FNB" && (
+                <FloatingSelect
+                  id="accountType"
+                  label="Account Type"
+                  value={formData.accountType}
+                  options={accountTypeOptions}
+                  onChange={(e) => handleChange('accountType', e.target.value)}
+                />
+              )}
               <FloatingInput
                 id="branchCode"
                 label="Branch Code"
@@ -787,6 +832,39 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
 
               <div className="flex justify-end">
                 <Button type="button" onClick={() => setIsTopUpOpen(false)}>Close</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Confirmation Modal */}
+        <Dialog open={showConfirmationModal} onOpenChange={setShowConfirmationModal}>
+          <DialogContent className="sm:max-w-lg bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Confirm Your Details</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                Please cross-check all your details carefully. You may be charged for corrections if any changes are needed after submission.
+              </p>
+              <div className="space-y-2 text-sm">
+                <div><strong>Country:</strong> {countries.find(c => c.country_code === countryCode)?.countryName}</div>
+                <div><strong>Company:</strong> {formData.companyName}</div>
+                <div><strong>Account Holder:</strong> {formData.accountHolder}</div>
+                <div><strong>Account Number:</strong> {formData.accountNumber}</div>
+                <div><strong>Bank:</strong> {formData.bankType}</div>
+                {formData.bankType === "FNB" && <div><strong>Account Type:</strong> {formData.accountType}</div>}
+                <div><strong>Salary:</strong> R{formData.salaryAmount}</div>
+                <div><strong>Months:</strong> {formData.months}</div>
+                <div><strong>Total Cost:</strong> R{totalCost}</div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowConfirmationModal(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={confirmSubmit}>
+                  Confirm & Generate
+                </Button>
               </div>
             </div>
           </DialogContent>
