@@ -122,14 +122,14 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   const hasPayslipAvailable = useMemo(() => {
     const cfg = countries.find(c => c.country_code === countryCode);
     return !!cfg?.documents.some(d => d.documentType === 'PAYSLIP');
-  }, [countryCode]);
+  }, [countryCode, countries]);
 
   const totalCost = useMemo(() => {
     const cfg = countries.find(c => c.country_code === countryCode);
     const bankPrice = cfg?.documents.find(d => d.documentType === 'BANK_STATEMENT')?.price || 0;
     const payslipPrice = cfg?.documents.find(d => d.documentType === 'PAYSLIP')?.price || 0;
     return bankPrice + (isPayslipIncluded ? payslipPrice : 0);
-  }, [countryCode, isPayslipIncluded]);
+  }, [countryCode, isPayslipIncluded, countries]);
 
   useEffect(() => {
     if (!hasPayslipAvailable) setIsPayslipIncluded(false);
