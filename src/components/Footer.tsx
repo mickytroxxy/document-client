@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export const Footer = () => {
   const handleWhatsApp = () => {
-    window.open('https://wa.me/27609155512', '_blank');
+    window.open('https://wa.me/27692784497', '_blank');
   };
 
   return (
@@ -87,7 +87,7 @@ export const Footer = () => {
               </li>
               <li className="flex items-center gap-3 text-primary-foreground/70">
                 <Phone className="w-5 h-5 text-secondary" />
-                <span>+27 60 915 5512</span>
+                <span>+27 69 278 4497</span>
               </li>
               <li>
                 <button 
@@ -95,7 +95,7 @@ export const Footer = () => {
                   className="flex items-center gap-3 text-primary-foreground/70 hover:text-green-400 transition-colors"
                 >
                   <MessageCircle className="w-5 h-5 text-green-500" />
-                  <span>+27 609 155 512 (WhatsApp)</span>
+                  <span>+27 69 278 4497 (WhatsApp)</span>
                 </button>
               </li>
               <li className="flex items-start gap-3 text-primary-foreground/70">

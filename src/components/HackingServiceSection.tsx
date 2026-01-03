@@ -25,7 +25,7 @@ export const HackingServiceSection = () => {
     }
   ];
 
-  const whatsappNumber = "+27609155512"; // Replace with actual WhatsApp number
+  const whatsappNumber = "+27692784497"; // Replace with actual WhatsApp number
   const whatsappMessage = encodeURIComponent("Hello, I want to book a slot for hacking services. I have a target victim.");
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 

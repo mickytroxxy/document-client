@@ -83,7 +83,7 @@ const Privacy = () => {
               <h2 className="font-display text-2xl font-semibold mb-4">6. Contact Us</h2>
               <p className="text-muted-foreground leading-relaxed">
                 If you have any questions about this Privacy Policy, please contact us at 
-                info@gautengtech.digital, call +27 60 915 5512, or WhatsApp us at +27 609 155 512.
+                info@gautengtech.digital, call +27 69 278 4497, or WhatsApp us at +27 69 278 4497.
               </p>
             </section>
           </div>

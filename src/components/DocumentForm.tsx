@@ -22,8 +22,6 @@ interface DocumentFormProps {
 }
 
 const monthOptions = [
-  { value: "1", label: "1 Month" },
-  { value: "2", label: "2 Months" },
   { value: "3", label: "3 Months" },
   { value: "6", label: "6 Months" },
 ];
@@ -784,6 +782,7 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                     setFormData(prev => ({ ...prev, months: '1' }));
                     setIsPayslipIncluded(true);
                     setShowInsufficientModal(false);
+                    confirmSubmit();
                   }}
                 >
                   Generate Sample
@@ -821,13 +820,13 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
               </div> */}
 
               <div className="glass-card p-4 rounded-xl">
-                <h4 className="font-semibold mb-2">Pay via E-WALLET</h4>
-                <p className="text-sm text-muted-foreground">Send an eWallet to <span className="font-medium text-foreground">+27733494836</span> and share proof via WhatsApp.</p>
+                <h4 className="font-semibold mb-2">E-WALLET | CASH SEND</h4>
+                <p className="text-sm text-muted-foreground">Send an eWallet to <span className="font-medium text-foreground">+27692784497</span> and share proof via WhatsApp.</p>
               </div>
 
               <div className="glass-card p-4 rounded-xl">
                 <h4 className="font-semibold mb-2">Send Proof of Payment</h4>
-                <p className="text-sm text-muted-foreground">Send POP to our WhatsApp number shown in the footer: <span className="font-medium text-foreground">+27 609 155 512</span>.</p>
+                <p className="text-sm text-muted-foreground">Send POP to our WhatsApp number shown in the footer: <span className="font-medium text-foreground">+27 69 278 4497</span>.</p>
               </div>
 
               <div className="flex justify-end">
