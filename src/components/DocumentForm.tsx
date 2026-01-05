@@ -166,21 +166,26 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Check balance
-    if (balance < totalCost) {
-      setShowInsufficientModal(true);
+    // Check if user is logged in (phone number required)
+    if (!phone) {
+      toast.error("Please log in to generate documents");
+      setIsLoginOpen(true);
       return;
     }
 
     // Validate required fields
-    const requiredFields = ['accountHolder', 'accountNumber', 'salaryAmount', 'idNumber', 'companyName'];
+    const requiredFields = ['accountHolder', 'accountNumber', 'salaryAmount', 'idNumber', 'companyName','availableBalance','months','title','openBalance'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
 
     if (missingFields.length > 0) {
       toast.error("Please fill in all required fields");
       return;
     }
-
+    // Check balance
+    if (balance < totalCost) {
+      setShowInsufficientModal(true);
+      return;
+    }
     // Show confirmation modal
     setShowConfirmationModal(true);
   };
