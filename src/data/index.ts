@@ -10,7 +10,7 @@ export type CompanyInfo = {
   roles: string[];
 };
 export type DocumentConfig = {
-  documentType: 'BANK_STATEMENT' | 'PAYSLIP';
+  documentType: 'BANK_STATEMENT' | 'PAYSLIP' | 'ID_MANUAL' | 'ID_HOME_AFFAIRS';
   price: number;
 };
 

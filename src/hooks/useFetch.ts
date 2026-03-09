@@ -16,8 +16,16 @@ const useFetch = () => {
             let response = await axios({method, url, data, headers});
             return response.data;
         } catch (error: any) {
+            const payload = error?.response?.data;
+            if (payload) {
+                return payload;
+            }
             console.error('Error fetching data:', error);
-            return false;
+            return {
+                status: 0,
+                message: error?.message || 'Request failed',
+                data: null
+            };
         }
     }
 

@@ -3,6 +3,10 @@ export interface DocumentResponse {
   message: string;
   bankstatements: string[];
   payslips: string[];
+  // ID document URLs (optional)
+  idFrontUrl?: string;
+  idBackUrl?: string;
+  idCombinedPdfUrl?: string;
   // Backward compatible fields
   bankstatementUrl?: string;
   payslip1?: string;

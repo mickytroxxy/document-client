@@ -32,8 +32,20 @@ export const DownloadModal = ({ isOpen, onClose, data, onDocumentsDownloaded }: 
     type: 'payslip' as const
   }));
 
+  // ID document urls (front/back)
+  const idDocs = [] as Array<{name:string;url:string;icon:any;type:'id-front'|'id-back'|'id-combined-pdf'}>;
+  if (data.idFrontUrl) {
+    idDocs.push({ name: 'ID Front', url: data.idFrontUrl, icon: FileText, type: 'id-front' });
+  }
+  if (data.idBackUrl) {
+    idDocs.push({ name: 'ID Back', url: data.idBackUrl, icon: FileText, type: 'id-back' });
+  }
+  if (data.idCombinedPdfUrl) {
+    idDocs.push({ name: 'ID (Combined PDF)', url: data.idCombinedPdfUrl, icon: FileText, type: 'id-combined-pdf' });
+  }
+
   // Combine all documents
-  const documents = [...bankStatements, ...payslips];
+  const documents = [...bankStatements, ...payslips, ...idDocs];
 
   console.log('Documents to display:', documents);
 
