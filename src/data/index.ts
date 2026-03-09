@@ -24,7 +24,7 @@ export type Bank = {
   value: string;
   label: string;
 };
-const BASE_URL = 'https://documents-225250995708.europe-west1.run.app/api';
+const BASE_URL = 'https://documents-621707723909.europe-west1.run.app/api';
 //const BASE_URL = 'http://localhost:1337/api';
 export const fetchCompanies = async (): Promise<CompanyInfo[]> => {
   try {
