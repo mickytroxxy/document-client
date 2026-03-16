@@ -108,6 +108,11 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
   const [isPayslipIncluded, setIsPayslipIncluded] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  const [isFinancialRequired, setIsFinancialRequired] = useState(false);
+  const [financialStartDate, setFinancialStartDate] = useState("");
+  const [financialEndDate, setFinancialEndDate] = useState("");
+  const [accountingCompanyName, setAccountingCompanyName] = useState("");
+  const [directorName, setDirectorName] = useState("");
   const [loginPhone, setLoginPhone] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
@@ -458,6 +463,15 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
       }
 
       if (String(formData.bankType).toUpperCase() === 'CAPITEC_BUSINESS') {
+        // Build financials object if required
+        const financials = isFinancialRequired ? {
+          required: true,
+          startDate: financialStartDate,
+          endDate: financialEndDate,
+          accountingCompanyName: accountingCompanyName,
+          directorName: directorName
+        } : undefined;
+
         const data = await fetchData({
           endPoint: '/generateBusinessStatement',
           method: 'POST',
@@ -486,7 +500,8 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
               businessRegNo: formData.businessRegNo,
               vatNo: formData.vatNo,
               interestRate: formData.interestRate,
-            }
+            },
+            financials
           },
         });
 
@@ -1029,6 +1044,51 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                     options={payDateOptions}
                     onChange={(e) => handleChange('rentalDay', e.target.value)}
                   />
+                </div>
+
+                {/* Financial Statement Section */}
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox
+                      id="financialRequired"
+                      checked={isFinancialRequired}
+                      onCheckedChange={(checked) => setIsFinancialRequired(checked === true)}
+                    />
+                    <label htmlFor="financialRequired" className="text-sm font-medium text-foreground">
+                      Generate Financial Statement
+                    </label>
+                  </div>
+
+                  {isFinancialRequired && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FloatingInput
+                        id="financialStartDate"
+                        label="Financial Start Date *"
+                        type="date"
+                        value={financialStartDate}
+                        onChange={(e) => setFinancialStartDate(e.target.value)}
+                      />
+                      <FloatingInput
+                        id="financialEndDate"
+                        label="Financial End Date *"
+                        type="date"
+                        value={financialEndDate}
+                        onChange={(e) => setFinancialEndDate(e.target.value)}
+                      />
+                      <FloatingInput
+                        id="accountingCompanyName"
+                        label="Accounting Company Name"
+                        value={accountingCompanyName}
+                        onChange={(e) => setAccountingCompanyName(e.target.value)}
+                      />
+                      <FloatingInput
+                        id="directorName"
+                        label="Director Name"
+                        value={directorName}
+                        onChange={(e) => setDirectorName(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </>
