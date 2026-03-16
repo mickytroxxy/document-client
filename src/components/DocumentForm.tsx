@@ -96,7 +96,9 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
     bankTelephone: "",
     interestRate: "22.1000%",
     salaryDay: "25",
+    salaryAmount: "20000",
     rentalDay: "1",
+    rentalAmount: "5000",
     targetClosingBalance: "",
     comment: "",
   });
@@ -389,7 +391,9 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
             businessName: businessData.businessName,
             openingBalance: parseFloat(businessData.openBalance) || 0,
             salaryDay: parseInt(businessData.salaryDay),
+            salaryAmount: parseFloat(businessData.salaryAmount) || 0,
             rentalDay: parseInt(businessData.rentalDay),
+            rentalAmount: parseFloat(businessData.rentalAmount) || 0,
             targetFinalClosingBalance: businessData.targetClosingBalance ? parseFloat(businessData.targetClosingBalance) : undefined,
             comment: businessData.comment,
             address: {
@@ -859,12 +863,24 @@ export const DocumentForm = ({ onBack, onSuccess }: DocumentFormProps) => {
                       options={payDateOptions}
                       onChange={(e) => handleBusinessChange('salaryDay', e.target.value)}
                     />
+                    <FloatingInput
+                      id="salaryAmount"
+                      label="Salary Amount"
+                      value={businessData.salaryAmount}
+                      onChange={(e) => handleBusinessChange('salaryAmount', e.target.value)}
+                    />
                     <FloatingSelect
                       id="rentalDay"
                       label="Rental Day"
                       value={businessData.rentalDay}
                       options={payDateOptions}
                       onChange={(e) => handleBusinessChange('rentalDay', e.target.value)}
+                    />
+                    <FloatingInput
+                      id="rentalAmount"
+                      label="Rental Amount"
+                      value={businessData.rentalAmount}
+                      onChange={(e) => handleBusinessChange('rentalAmount', e.target.value)}
                     />
                   </div>
                 </div>
