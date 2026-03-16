@@ -16,11 +16,11 @@ export const Footer = () => {
               <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
                 <FileText className="w-5 h-5 text-primary" />
               </div>
-              <span className="font-display text-xl font-bold">GautengTech</span>
+              <span className="font-display text-xl font-bold">Cypher Creative Digitals</span>
             </div>
             <p className="text-primary-foreground/70 mb-6">
               AI-powered financial document generation. Create professional bank statements 
-              and payslips in minutes with GautengTech Digital.
+              and payslips in minutes with Cypher Creative Digitals.
             </p>
             <div className="flex gap-4">
               <button 
@@ -83,7 +83,7 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-center gap-3 text-primary-foreground/70">
                 <Mail className="w-5 h-5 text-secondary" />
-                <span>info@gautengtech.digital</span>
+                <span>admin@cyphercreative.digital</span>
               </li>
               <li className="flex items-center gap-3 text-primary-foreground/70">
                 <Phone className="w-5 h-5 text-secondary" />
@@ -110,7 +110,7 @@ export const Footer = () => {
         <div className="border-t border-primary-foreground/10 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-primary-foreground/50 text-sm">
-              © {new Date().getFullYear()} GautengTech Digital. All rights reserved.
+              © {new Date().getFullYear()} Cypher Creative Digitals. All rights reserved.
             </p>
             <p className="text-primary-foreground/50 text-sm">
               Powered by Advanced AI Technology

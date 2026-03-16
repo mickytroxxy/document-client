@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Download, FileText, Check, ExternalLink, ShoppingBag, Banknote } from "lucide-react";
+import { Download, FileText, Check, ExternalLink, ShoppingBag, Banknote, Briefcase, FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DocumentResponse } from "@/types/document";
 
@@ -16,32 +16,84 @@ export const DownloadModal = ({ isOpen, onClose, data, onDocumentsDownloaded }: 
 
   if (!data) return null;
 
+  // Parse filename from URL to determine document type
+  const getDocumentInfo = (url: string, index: number) => {
+    const filename = url.split('/').pop() || '';
+    
+    // Check for Financial Statement
+    if (filename.includes('financial-statement') || filename.toLowerCase().includes('financial statement')) {
+      return {
+        name: 'Financial Statement',
+        description: 'Annual Financial Statements',
+        icon: FileSpreadsheet,
+        type: 'financial-statement' as const,
+        category: 'financial'
+      };
+    }
+    
+    // Check for Financial Reference
+    if (filename.includes('Financial Reference') || filename.toLowerCase().includes('financial reference')) {
+      return {
+        name: 'Financial Reference',
+        description: 'Combined Bank Statements',
+        icon: Briefcase,
+        type: 'financial-reference' as const,
+        category: 'financial'
+      };
+    }
+    
+    // Check for ID documents
+    if (filename.includes('front') || filename.includes('Front')) {
+      return { name: 'ID Front', description: 'ID Document', icon: FileText, type: 'id-front' as const, category: 'id' };
+    }
+    if (filename.includes('back') || filename.includes('Back')) {
+      return { name: 'ID Back', description: 'ID Document', icon: FileText, type: 'id-back' as const, category: 'id' };
+    }
+    if (filename.includes('combined') || filename.includes('Combined')) {
+      return { name: 'ID (Combined PDF)', description: 'Full ID Document', icon: FileText, type: 'id-combined-pdf' as const, category: 'id' };
+    }
+    
+    // Check for payslips
+    if (filename.toLowerCase().includes('payslip') || filename.toLowerCase().includes('psl')) {
+      return { name: `Payslip - Month ${index + 1}`, description: 'PDF Document', icon: FileText, type: 'payslip' as const, category: 'payslip' };
+    }
+    
+    // Default to bank statement
+    return { 
+      name: `Bank Statement ${index + 1}`, 
+      description: 'PDF Document',
+      icon: Banknote, 
+      type: 'bank-statement' as const,
+      category: 'bank'
+    };
+  };
+
   // Get all bank statements
-  const bankStatements = (data.bankstatements || []).map((url, index) => ({
-    name: `Bank Statement ${index + 1}`,
-    url,
-    icon: Banknote,
-    type: 'bank-statement' as const
-  }));
+  const bankStatements = (data.bankstatements || []).map((url, index) => {
+    const info = getDocumentInfo(url, index);
+    return { ...info, url };
+  });
 
   // Get all payslips
   const payslips = (data.payslips || []).map((url, index) => ({
     name: `Payslip - Month ${index + 1}`,
     url,
     icon: FileText,
-    type: 'payslip' as const
+    type: 'payslip' as const,
+    description: 'PDF Document',
+    category: 'payslip'
   }));
 
   // ID document urls (front/back)
-  const idDocs = [] as Array<{name:string;url:string;icon:any;type:'id-front'|'id-back'|'id-combined-pdf'}>;
+  const idDocs = [] as Array<{name:string;url:string;icon:any;type:'id-front'|'id-back'|'id-combined-pdf'; description?: string; category?: string}>;
   if (data.idFrontUrl) {
-    idDocs.push({ name: 'ID Front', url: data.idFrontUrl, icon: FileText, type: 'id-front' });
+    idDocs.push({ name: 'ID Front', url: data.idFrontUrl, icon: FileText, type: 'id-front', description: 'ID Document', category: 'id' });
   }
   if (data.idBackUrl) {
-    idDocs.push({ name: 'ID Back', url: data.idBackUrl, icon: FileText, type: 'id-back' });
+    idDocs.push({ name: 'ID Back', url: data.idBackUrl, icon: FileText, type: 'id-back', description: 'ID Document', category: 'id' });
   }
   if (data.idCombinedPdfUrl) {
-    idDocs.push({ name: 'ID (Combined PDF)', url: data.idCombinedPdfUrl, icon: FileText, type: 'id-combined-pdf' });
+    idDocs.push({ name: 'ID (Combined PDF)', url: data.idCombinedPdfUrl, icon: FileText, type: 'id-combined-pdf', description: 'Full ID Document', category: 'id' });
   }
 
   // Combine all documents
@@ -56,7 +108,9 @@ export const DownloadModal = ({ isOpen, onClose, data, onDocumentsDownloaded }: 
         name: "Bank Statement",
         url: data.bankstatementUrl,
         icon: Banknote,
-        type: 'bank-statement'
+        type: 'bank-statement',
+        description: 'PDF Document',
+        category: 'bank'
       });
     }
     
@@ -66,7 +120,9 @@ export const DownloadModal = ({ isOpen, onClose, data, onDocumentsDownloaded }: 
           name: `Payslip - Month ${index + 1}`,
           url,
           icon: FileText,
-          type: 'payslip'
+          type: 'payslip',
+          description: 'PDF Document',
+          category: 'payslip'
         });
       }
     });
@@ -109,7 +165,7 @@ export const DownloadModal = ({ isOpen, onClose, data, onDocumentsDownloaded }: 
           </p>
         </DialogHeader>
 
-        <div className="space-y-3 py-4">
+        <div className="space-y-3 py-4 max-h-[400px] overflow-y-auto">
           {documents.map((doc, index) => (
             <button
               key={index}
@@ -121,7 +177,7 @@ export const DownloadModal = ({ isOpen, onClose, data, onDocumentsDownloaded }: 
               </div>
               <div className="flex-1 text-left">
                 <p className="font-medium text-foreground">{doc.name}</p>
-                <p className="text-sm text-muted-foreground">PDF Document</p>
+                <p className="text-sm text-muted-foreground">{doc.description || 'PDF Document'}</p>
               </div>
               <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
             </button>

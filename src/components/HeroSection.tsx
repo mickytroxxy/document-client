@@ -31,7 +31,7 @@ export const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
 
           {/* Heading */}
           <h1 className="font-display text-5xl md:text-7xl font-bold text-primary-foreground mb-6 animate-fade-in-up delay-100">
-            GautengTech
+            Cypher Creative
             <span className="block gradient-text mt-2">Digital Solutions</span>
           </h1>
 
