@@ -13,7 +13,7 @@ const useFetch = () => {
                 'Content-Type': 'application/json',
                 'Accept': 'application/zip,application/json',
             };
-            let response = await axios({method, url, data, headers});
+            let response = await axios({method, url, data, headers, timeout: 1800000});
             return response.data;
         } catch (error: any) {
             const payload = error?.response?.data;
